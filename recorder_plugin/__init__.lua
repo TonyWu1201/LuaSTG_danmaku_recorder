@@ -1,0 +1,1 @@
+print("[danmaku recorder]注意：如果你在log中看到了这段文字，说明插件并没有按照新模式运行，请检查LuaSTG版本。对于较低版本的LuaSTG需要手动配置，详情请见说明。")
