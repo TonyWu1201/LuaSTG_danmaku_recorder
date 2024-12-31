@@ -5,7 +5,9 @@ local recorder_ui = {}
 recorder_ui.ver = {}
 recorder_ui.ver.major = 1
 recorder_ui.ver.minor = 0
-recorder_ui.ver.patch = 1
+recorder_ui.ver.patch = 2
+
+local highlight_color = lstg.Color(100, 255, 0, 255)
 
 recorder_ui.init = function (self)
     self.func = {
@@ -133,8 +135,6 @@ recorder_ui.init = function (self)
                         _self.capture_status = 0
                         _self.point1x, _self.point1y, _self.point2x, _self.point2y = 0, 0, 0, 0
                         recorder:set_capture_area(_self.fallback.l, _self.fallback.t, _self.fallback.r, _self.fallback.b)
-                        recorder:set_draw_capture_area(false)
-                        ui_obj.draw_capture_area = false
                         lstg.SetSplash(false)
                         _self.fallback = nil
                     end
@@ -144,8 +144,6 @@ recorder_ui.init = function (self)
                         if ui_obj:mouse_press() then
                             _self.point1x, _self.point1y = CT.CoordTransfer("window", "ui", lstg.Input.Mouse.GetPosition())
                             _self.capture_status = 1
-                            recorder:set_draw_capture_area(true)
-                            ui_obj.draw_capture_area = true
                         end
                     end
                     if _self.capture_status == 1 then
@@ -160,8 +158,6 @@ recorder_ui.init = function (self)
                             ui_obj.mouse_capture = nil
                             _self.capture_status = 0
                             _self.point1x, _self.point1y, _self.point2x, _self.point2y = 0, 0, 0, 0
-                            recorder:set_draw_capture_area(false)
-                            ui_obj.draw_capture_area = false
                             lstg.SetSplash(false)
                         end
                     end
@@ -176,10 +172,10 @@ recorder_ui.init = function (self)
         {text = "[P]显示录制区域", capture_key = KEY.P, func = function (_self, ui_obj)
             if ui_obj:key_down(_self.capture_key) then
                 _self.flag = "selected"
-                recorder:set_draw_capture_area(true)
+                self.draw_capture_area = true
             else
                 _self.flag = "selectable"
-                recorder:set_draw_capture_area(false or ui_obj.draw_capture_area)
+                self.draw_capture_area = false
             end
         end},
     }
@@ -233,7 +229,6 @@ recorder_ui.frame = function (self)
     end
     if self:key_press(KEY.Q) and not self.mouse_capture then
         self.activate = not self.activate
-        recorder:set_draw_capture_area(false)
     end
     if self.recorder_status ~= "uninitialized" and self.activate then
         for _, v in ipairs(self.func) do
@@ -308,6 +303,17 @@ recorder_ui.render = function (self)
     local left = 400
     local right = 620
     local r_color
+
+    if self.draw_capture_area or self.mouse_capture then
+        lstg.SetImageState("white", "mul+add", highlight_color)
+        local capture_area = recorder:get_capture_area()
+        lstg.Render4V("white",
+                capture_area.l, capture_area.b, 0.5,
+                capture_area.l, capture_area.t, 0.5,
+                capture_area.r, capture_area.t, 0.5,
+                capture_area.r, capture_area.b, 0.5
+            )
+    end
 
     SetImageState('white', '', Color(180 * self.alpha, 20, 20, 20))
     RenderRect('white', left, right, top, bottom)

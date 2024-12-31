@@ -11,9 +11,9 @@
 ### LuaSTG aex+ 0.9.0以上的版本
 把recorder_plugin文件夹复制到LuaSTG的plugins文件夹下，在设置里启用danmaku_recorder插件。
 
-如果要指定FFmpeg的路径，请打开register_event.lua，找到`recorder:init()`，在括号中添加FFmpeg路径（字符串）。
+如果要启用原先的UI，请打开register_event.lua，找到`config`，修改键`use_native_ui`的值为`true`。
 
-例如`recorder:init("D:\\FFmpeg_bin\\ffmpeg.exe")`
+如果要指定FFmpeg的路径，请打开register_event.lua，找到`config`，修改键`ffmpeg_path`的值。
 ### LuaSTG aex+ 0.8.x的版本
 把recorder_plugin文件夹复制到LuaSTG的plugins文件夹下，在设置里启用danmaku_recorder插件。
 
@@ -21,31 +21,48 @@
 ```lua
 local recorder_exist, recorder = pcall(require, "danmaku_recorder.recorder")
 if recorder_exist then recorder:init() end
+local recorder_imgui_exist, recorder_imgui = pcall(require, "danmaku_recorder.recorder_imgui")
+if recorder_imgui_exist then
+    recorder_imgui:init()
+    local debugger = require('lib.Ldebug')
+    debugger.addView("Danmaku Recorder Plugin", recorder_imgui)
+end
+```
+如果要使用原生UI，再添加以下内容
+```lua
 local recorder_ui_exist, recorder_ui = pcall(require, "danmaku_recorder.recorder_ui")
 if recorder_ui_exist then recorder_ui:init() end
 ```
-如果要指定FFmpeg的路径，请在调用`recorder:init`时传入路径，与上述方法相同
+如果要指定FFmpeg的路径，请在调用`recorder:init`时传入路径。
 
-在GameScene:onUpdate中添加以下内容
+如果要使用原生UI，在`GameScene:onUpdate`中添加以下内容
 ```lua
 if recorder_ui_exist then recorder_ui:frame() end
 ```
-在GameScene:onRender的BeforeRender()后面添加以下内容
+在`GameScene:onRender`的`BeforeRender()`后面添加以下内容
 ```lua
 if recorder_exist then recorder:start_capture() end
 ```
-在GameScene:onRender的ObjRender()后面添加以下内容
+在`GameScene:onRender`的`ObjRender()`后面添加以下内容
 ```lua
 if recorder_exist then recorder:end_capture() end
 SetViewMode("ui")
 if recorder_exist then recorder:draw_capture_content() end
 ```
-在GameScene:onRender的AfterRender()后面添加以下内容
+在`GameScene:onRender`的`AfterRender()`后面添加以下内容
+```lua
+SetViewMode("ui")
+if recorder_imgui_exist then recorder_imgui:render() end
+```
+如果要使用原生UI，在`GameScene:onRender`的`AfterRender()`后面添加以下内容
 ```lua
 SetViewMode("ui")
 if recorder_ui_exist then recorder_ui:render() end
 ```
 ## Step3 插件使用说明
+### ImGuiUI
+按下F3打开debug菜单，在Tool里面找到`Danmaku Recorder Plugin`，打开即可使用。
+### 原生UI
 按Q启动菜单，可以用Danmaku Recorder UI控制Danmaku Recorder。
 
 按O键可以拖动鼠标框选录制区域，按下O键以后按住鼠标不放，拖动到直到框出希望截取的区域再松开。在未按下或未松开鼠标时再按O会取消。
@@ -61,10 +78,18 @@ if recorder_ui_exist then recorder_ui:render() end
     3. 增加了手动指定ffmpeg路径的功能。
 + 1.0.2
     1. 把忘记删掉的print删掉了。
++ 1.0.3
+    1. 将显示录制区域的功能移除，改为在UI中渲染。
+    2. 生成调色板的命令合并
 ### Danmaku Recorder UI
 + 1.0.1
     1. 调整了默认选项。
     2. 增加了在UI里显示Recorder版本号。
++ 1.0.2
+    1. 显示录制区域改为在UI中渲染。
+### Danmaku Recorder UI (ImGui)
++ 1.1.0
+    1. 用ImGui重写了原本的UI。
 ### 其他
 + Bundle 1.0.1
     1. 调整目录结构。
@@ -72,6 +97,8 @@ if recorder_ui_exist then recorder_ui:render() end
 + Bundle 1.0.2
     1. 调整目录结构，便于推送到GitHub。
     2. 补充开源许可相关信息。
++ Bundle 1.0.3
+    1. 添加并默认使用ImGuiUI。
 ## 开源许可相关
 1. recorder_ui_font.otf 使用的是Adobe开发的[思源黑体](https://github.com/adobe-fonts/source-han-sans)，遵守SIL Open Font License Version 1.1开源许可。
 2. CoordTransfer.lua 是由Xiliusha编写的坐标系映射工具，有一定修改。

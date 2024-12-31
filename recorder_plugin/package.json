@@ -1,6 +1,6 @@
 {
     "name": "danmaku_recorder",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "A plugin using FFmepg to generate danmaku gif",
     "main": "register_event.lua"
 }

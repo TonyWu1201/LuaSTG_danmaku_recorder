@@ -3,7 +3,7 @@ local recorder = {}
 recorder.ver = {}
 recorder.ver.major = 1
 recorder.ver.minor = 0
-recorder.ver.patch = 2
+recorder.ver.patch = 3
 
 local ffmpeg_path = "ffmpeg.exe"
 
@@ -100,6 +100,7 @@ recorder.get_capture_area = function (self)
     return {l = capture_l, t = capture_t, r = capture_r, b = capture_b}
 end
 
+--To be deprecated
 recorder.set_draw_capture_area = function (self, flag)
     if initialized then
         draw_capture_area = flag
@@ -173,15 +174,15 @@ recorder.draw_capture_content = function ()
             {screen.width, 0, 0.5, width, height, Color(255, 255, 255, 255)},--右下
             {0, 0, 0.5, 0, height, Color(255, 255, 255, 255)}--左下
         )
-        if draw_capture_area then
-            SetImageState("white", "", Color(100, 255, 0, 255))
-            Render4V("white",
-                capture_l, capture_b, 0.5,
-                capture_l, capture_t, 0.5,
-                capture_r, capture_t, 0.5,
-                capture_r, capture_b, 0.5
-            )
-        end
+        -- if draw_capture_area then
+        --     SetImageState("white", "", Color(100, 255, 0, 255))
+        --     Render4V("white",
+        --         capture_l, capture_b, 0.5,
+        --         capture_l, capture_t, 0.5,
+        --         capture_r, capture_t, 0.5,
+        --         capture_r, capture_b, 0.5
+        --     )
+        -- end
     end
 end
 
@@ -210,13 +211,10 @@ recorder.end_record = function (self)
         local width, height = lstg.GetTextureSize(self.capture_tex)
         local tmp_path = 'danmaku_recorder\\tmp\\' .. task_name
         local jpg_path = tmp_path .. "\\%03d.jpg"
-        local palette_path = tmp_path .. "\\palette.png"
         local output_path = 'danmaku_recorder\\output\\' .. task_name .. ".gif"
-        local create_palette_cmd = string.format("%s -i %s -vf palettegen %s", ffmpeg_path, jpg_path, palette_path)
-        local create_gif_cmd = string.format("%s -framerate %d -s %d*%d -i %s -i %s -lavfi paletteuse %s", ffmpeg_path, 60 / interval, width, height, jpg_path, palette_path, output_path)
-        local ret1 = call_command(create_palette_cmd)
-        local ret2 = call_command(create_gif_cmd)
-        if ret1 ~= 0 or ret2 ~= 0 then
+        local create_gif_cmd = string.format("%s -framerate %d -s %d*%d -i %s -vf \"split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse\" %s", ffmpeg_path, 60 / interval, width, height, jpg_path, output_path)
+        local ret = call_command(create_gif_cmd)
+        if ret ~= 0 then
             last_record_info.success = false
             last_record_info.size = -1
         else
