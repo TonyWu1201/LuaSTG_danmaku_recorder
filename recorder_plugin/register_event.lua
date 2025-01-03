@@ -1,15 +1,14 @@
 --config
 local config = {
     use_imgui = true,
-    use_native_ui = false,
-    ffmpeg_path = nil --如需指定ffmpeg路径请手动修改此项
+    use_native_ui = false
 }
 
 local event_dispatcher = lstg.globalEventDispatcher
 local debugger = require('lib.Ldebug')
 
 local recorder = require("danmaku_recorder.recorder")
-recorder:init(config.ffmpeg_path)
+recorder:init()
 
 local recorder_ui
 if config.use_native_ui then

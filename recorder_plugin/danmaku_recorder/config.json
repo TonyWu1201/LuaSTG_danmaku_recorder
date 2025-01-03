@@ -1,0 +1,20 @@
+{
+    "encoder_path" : {
+        "ffmpeg" : "ffmpeg.exe",
+        "SimpleGifEncoder": "..\\tools\\SimpleGifEncoder\\SimpleGifEncoder.exe"
+    },
+    "preferred_encoder" : "ffmpeg",
+    "hotkeys": {
+        "start_record" : ["NULL"],
+        "end_record" : ["NULL"]
+    },
+    "save_config" : {
+        "enable" : true,
+        "path" : "userdata/extension/danmaku_recorder.json"
+    },
+    "default_config" : {
+        "framerate" : 20,
+        "scale" : 0.4,
+        "maxframe" : 125
+    }
+}

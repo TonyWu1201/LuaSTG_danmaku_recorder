@@ -5,7 +5,7 @@ local recorder_ui = {}
 recorder_ui.ver = {}
 recorder_ui.ver.major = 1
 recorder_ui.ver.minor = 0
-recorder_ui.ver.patch = 2
+recorder_ui.ver.patch = 3
 
 local highlight_color = lstg.Color(100, 255, 0, 255)
 
@@ -295,7 +295,7 @@ end
 
 recorder_ui.render = function (self)
     SetViewMode 'ui'
-    local top = 200
+    local top = 220
     if not self.activate then
         top = 50
     end
@@ -322,6 +322,8 @@ recorder_ui.render = function (self)
     RenderTTF('recorder_ui_font', string.format("Danmaku Recorder UI ver %d.%d.%d", self.ver.major, self.ver.minor, self.ver.patch), left + 5, right - 5, font_tp - 12, font_tp, r_color, "left", "top")
     font_tp = font_tp - 15
     if self.activate then
+        RenderTTF('recorder_ui_font', "注意此UI已不再维护", left + 5, right - 5, font_tp - 12, font_tp, Color(220 * self.alpha, 255, 100, 100), "left", "top")
+        font_tp = font_tp - 15
         if self.recorder_status == "uninitialized" then
             r_color = Color(220 * self.alpha, 255, 0, 0)
             RenderTTF('recorder_ui_font', "未初始化无法使用", left + 5, right - 5, font_tp - 12, font_tp, r_color, "left", "top")
