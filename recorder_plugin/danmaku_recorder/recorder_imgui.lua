@@ -138,7 +138,6 @@ function recorder_imgui:update()
         local r = max(self.point1x, self.point2x)
         local b = min(self.point1y, self.point2y)
         local t = max(self.point1y, self.point2y)
-        lstg.Print(l, t, r, b)
         recorder:set_capture_area(l, t, r, b)
         if left_trigger() then
             self.set_capture_status = "null"
