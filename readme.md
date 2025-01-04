@@ -14,7 +14,7 @@
 3. 与上述配置FFmpeg方法相同配置SimpleGifEncoder的路径。
 ## Step2 安装插件
 ### LuaSTG aex+ 0.9.0以上的版本
-把recorder_plugin文件夹复制到LuaSTG的plugins文件夹下，在设置里启用danmaku_recorder插件。
+把此文件夹复制到LuaSTG的plugins文件夹下，在设置里启用danmaku_recorder插件。
 
 （不推荐）如果要启用原先的UI，请打开register_event.lua，找到`config`，修改键`use_native_ui`的值为`true`。
 
