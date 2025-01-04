@@ -79,6 +79,7 @@ eg.
         "end_record" : ["1", "Q", "F1"]
     },
     ```
++ `auto_enable` 为`true`则会自动启用插件，`false`则需要手动打开。
 + `save_config` 用于指定自动保存配置。`enable`为`true`即启用，`false`为禁用，`path`用于指定保存文件的路径。
 + `default_config` 用于指定默认配置。只在禁用自动保存或未从文件中读取配置时生效。
 

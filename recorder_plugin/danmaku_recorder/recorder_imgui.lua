@@ -112,16 +112,16 @@ function recorder_imgui:init()
                 if fhandle then
                     local success, recorder_ui_config = pcall(cjson.decode, fhandle:read("*a"))
                     if success then
-                        if recorder_ui_config.framerate_list_pos then
-                            self.framerate_list_pos = recorder_ui_config.framerate_list_pos
+                        if recorder_ui_config.framerate_list_pos and type(recorder_ui_config.framerate_list_pos) == "number" then
+                            self.framerate_list_pos = min(max(recorder_ui_config.framerate_list_pos, 1), #framerate_list)
                         end
-                        if recorder_ui_config.scale_list_pos then
-                            self.scale_list_pos = recorder_ui_config.scale_list_pos
+                        if recorder_ui_config.scale_list_pos and type(recorder_ui_config.scale_list_pos) == "number" then
+                            self.scale_list_pos = min(max(recorder_ui_config.scale_list_pos, 1), #scale_list)
                         end
-                        if recorder_ui_config.maxframe_list_pos then
-                            self.maxframe_list_pos = recorder_ui_config.maxframe_list_pos
+                        if recorder_ui_config.maxframe_list_pos and type(recorder_ui_config.maxframe_list_pos) == "number" then
+                            self.maxframe_list_pos = min(max(recorder_ui_config.maxframe_list_pos, 1), #maxframe_list)
                         end
-                        if recorder_ui_config.encoder then
+                        if recorder_ui_config.encoder and type(recorder_ui_config.encoder) == "number" then
                             self.current_encoder = min(max(recorder_ui_config.encoder, 1), #self.encoder_list)
                         end
                         loaded = true
@@ -160,6 +160,9 @@ function recorder_imgui:init()
                     if v == config.default_config.maxframe then self.maxframe_list_pos = i break end
                 end
             end
+        end
+        if config.auto_enable then
+            self.enable = true
         end
     end
     self.highlight_color = {255 / 255, 0 / 255, 255 / 255, 100 / 255} --rgba
@@ -209,7 +212,44 @@ function recorder_imgui:cancel_cursor_capture()
     recorder:set_capture_area(self.fallback_capture_area.l, self.fallback_capture_area.t, self.fallback_capture_area.r, self.fallback_capture_area.b)
 end
 
+local function start_record(self)
+    recorder:set_framerate(framerate_list[self.framerate_list_pos])
+    recorder:set_scale(scale_list[self.scale_list_pos])
+    recorder:set_max_frame(maxframe_list[self.maxframe_list_pos])
+    recorder:set_encoder(self.current_encoder)
+    recorder:start_record()
+end
+
+local function end_record(self)
+    recorder:end_record()
+end
+
 function recorder_imgui:update()
+    if self.enable then
+        local start_keyflag = false
+        local end_keyflag = false
+        for _, v in ipairs(self.start_record_trigger) do
+            if v() then
+                start_keyflag = true
+                break
+            end
+        end
+        for _, v in ipairs(self.end_record_trigger) do
+            if v() then
+                end_keyflag = true
+                break
+            end
+        end
+        if recorder:get_status() == "initialized" then
+            if start_keyflag then
+                start_record(self)
+            end
+        elseif recorder:get_status() == "recording" then
+            if end_keyflag then
+                end_record(self)
+            end
+        end
+    end
     if record_start() then
         self.last_record_info = nil
     end
@@ -280,32 +320,13 @@ end
 
 function recorder_imgui:layout()
     if imgui_exist then
-        local start_keyflag = false
-        local end_keyflag = false
-        for _, v in ipairs(self.start_record_trigger) do
-            if v() then
-                start_keyflag = true
-                break
-            end
-        end
-        for _, v in ipairs(self.end_record_trigger) do
-            if v() then
-                end_keyflag = true
-                break
-            end
-        end
         if recorder:get_status() == "initialized" then
-            
-            if imgui.ImGui.Button("开始录像" ..label) or start_keyflag then
-                recorder:set_framerate(framerate_list[self.framerate_list_pos])
-                recorder:set_scale(scale_list[self.scale_list_pos])
-                recorder:set_max_frame(maxframe_list[self.maxframe_list_pos])
-                recorder:set_encoder(self.current_encoder)
-                recorder:start_record()
+            if imgui.ImGui.Button("开始录像" ..label) then
+                start_record(self)
             end
         elseif recorder:get_status() == "recording" then
-            if imgui.ImGui.Button("停止录像" ..label) or end_keyflag then
-                recorder:end_record()
+            if imgui.ImGui.Button("停止录像" ..label) then
+                end_record(self)
             end
             imgui.ImGui.SameLine()
             imgui.ImGui.Text(string.format("%d / %d", recorder:get_recorded_frame_count(), recorder:get_max_frame()))
