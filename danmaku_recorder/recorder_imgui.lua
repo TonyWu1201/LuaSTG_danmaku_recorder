@@ -306,6 +306,7 @@ end
 
 function recorder_imgui:render()
     if self.show_capture or self.set_capture_status == "capturing" then
+        SetViewMode("ui")
         local l_color = lstg.Color(self.highlight_color[4] * 255, self.highlight_color[1] * 255, self.highlight_color[2] * 255, self.highlight_color[3] * 255)
         lstg.SetImageState("white", "mul+add", l_color)
         local capture_area = recorder:get_capture_area()
@@ -315,6 +316,7 @@ function recorder_imgui:render()
                 capture_area.r, capture_area.t, 0.5,
                 capture_area.r, capture_area.b, 0.5
             )
+        SetViewMode("world") -- 恢复
     end
 end
 

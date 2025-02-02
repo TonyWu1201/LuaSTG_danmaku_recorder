@@ -29,7 +29,6 @@ if event_dispatcher then
     end)
     event_dispatcher:RegisterEvent("GameState.AfterObjRender", "recorder_end_capture", 0, function ()
         recorder:end_capture()
-        SetViewMode("ui")
         recorder:draw_capture_content()
     end)
 
@@ -44,7 +43,6 @@ if event_dispatcher then
 
     if config.use_imgui then
         event_dispatcher:RegisterEvent("GameState.AfterRender", "recorder_imgui_render", -2, function ()
-            SetViewMode("ui")
             recorder_imgui:render()
         end)
     end

@@ -160,23 +160,44 @@ function recorder:start_capture()
     end
 end
 
+---@param name string
+---@param clear boolean
+---@param callback fun()
+local function scoped_render_target(name, clear, callback)
+    lstg.PushRenderTarget(name)
+    if clear then
+        lstg.RenderClear(lstg.Color(0, 0, 0, 0))
+    end
+    callback()
+    lstg.PopRenderTarget()
+end
+
 local function process_capture(self)
     if frame_counter % (60 / framerate) == 0 then
-        lstg.PushRenderTarget(self.capture_tex)
-        local width, height = lstg.GetTextureSize(self.capture_tex)
-        width = width / screen.scale
-        height = height / screen.scale
-        RenderClear(Color(0, 0, 0, 0))
-        local tex_l, tex_t = CT.CoordTransfer("ui", "shader", capture_l, capture_t)
-        local tex_r, tex_b = CT.CoordTransfer("ui", "shader", capture_r, capture_b)
-        SetViewMode("ui")
-        lstg.RenderTexture("danmaku_recorder_screen_capture", "",
-            {0, height, 0.5, tex_l, tex_t, Color(255, 255, 255, 255)},--左上
-            {width, height, 0.5, tex_r, tex_t, Color(255, 255, 255, 255)},--右上
-            {width, 0, 0.5, tex_r, tex_b, Color(255, 255, 255, 255)},--右下
-            {0, 0, 0.5, tex_l, tex_b, Color(255, 255, 255, 255)}--左下
-        )
-        lstg.PopRenderTarget()
+        scoped_render_target(self.capture_tex, true, function()
+            local width, height = lstg.GetTextureSize(self.capture_tex)
+            local l = 0
+            local r = width / screen.scale
+            local b = 0
+            local t = height / screen.scale
+            local z = 0.5
+            local tex_l, tex_t = CT.CoordTransfer("ui", "shader", capture_l, capture_t)
+            local tex_r, tex_b = CT.CoordTransfer("ui", "shader", capture_r, capture_b)
+
+            local vw, vh = width / screen.scale, height / screen.scale
+            lstg.SetOrtho(0, vw, 0, vh)
+            lstg.SetViewport(0, width, 0, height)
+            lstg.SetScissorRect(0, width, 0, height)
+            lstg.SetFog()
+            lstg.SetImageScale(1)
+
+            lstg.RenderTexture("danmaku_recorder_screen_capture", ""
+                , { l, t, z, tex_l, tex_t, Color(255, 255, 255, 255)} -- 左上
+                , { r, t, z, tex_r, tex_t, Color(255, 255, 255, 255)} -- 右上
+                , { r, b, z, tex_r, tex_b, Color(255, 255, 255, 255)} -- 右下
+                , { l, b, z, tex_l, tex_b, Color(255, 255, 255, 255)} -- 左下
+            )
+        end)
         lstg.SaveTexture(self.capture_tex, Storage.generateTempTaskFilePath(task_name, string.format("%03d", index) .. ".jpg"))
         index = index + 1
         if index >= max_frame then
@@ -195,14 +216,28 @@ end
 
 function recorder:draw_capture_content()
     if initialized and status == "recording" then
-        SetViewMode("ui")
-        local width, height = lstg.GetTextureSize("danmaku_recorder_screen_capture")
-        lstg.RenderTexture("danmaku_recorder_screen_capture", "",
-            {0, screen.height, 0.5, 0, 0, Color(255, 255, 255, 255)},--左上
-            {screen.width, screen.height, 0.5, width, 0, Color(255, 255, 255, 255)},--右上
-            {screen.width, 0, 0.5, width, height, Color(255, 255, 255, 255)},--右下
-            {0, 0, 0.5, 0, height, Color(255, 255, 255, 255)}--左下
+        local l = 0
+        local r = setting.resx
+        local b = 0
+        local t = setting.resy
+        local z = 0.5
+        local w, h = lstg.GetTextureSize("danmaku_recorder_screen_capture")
+        local c = lstg.Color(255, 255, 255, 255)
+
+        lstg.SetOrtho(l, r, b, t)
+        lstg.SetViewport(l, r, b, t)
+        lstg.SetScissorRect(l, r, b, t)
+        lstg.SetFog()
+        lstg.SetImageScale(1)
+
+        lstg.RenderTexture("danmaku_recorder_screen_capture", ""
+            , { l, t, z, 0, 0, c} -- 左上
+            , { r, t, z, w, 0, c} -- 右上
+            , { r, b, z, w, h, c} -- 右下
+            , { l, b, z, 0, h, c} -- 左下
         )
+
+        SetViewMode("world") -- 恢复
     end
 end
 
