@@ -15,6 +15,7 @@ local _ = {
 }
 
 local CT = require('danmaku_recorder.CoordTransfer')
+local Storage = require("danmaku_recorder.Storage")
 
 ---@type danmaku_recorder.encoder_info[]
 local encoder_info = {}
@@ -46,14 +47,8 @@ function recorder:init()
         lstg.CreateRenderTarget("danmaku_recorder_screen_capture")
         status = 'initialized'
         initialized = true
-        if not lstg.FileManager.DirectoryExist('danmaku_recorder') then
-            lstg.FileManager.CreateDirectory('danmaku_recorder')
-            lstg.FileManager.CreateDirectory('danmaku_recorder/output')
-        end
-        if lstg.FileManager.DirectoryExist('danmaku_recorder/tmp') then
-            lstg.FileManager.RemoveDirectory('danmaku_recorder/tmp')
-        end
-        lstg.FileManager.CreateDirectory('danmaku_recorder/tmp')
+        Storage.createDirectories()
+        Storage.clearTempDirectory()
     end
     self:load_config()
     self:set_capture_area_ui()
@@ -182,7 +177,7 @@ local function process_capture(self)
             {0, 0, 0.5, tex_l, tex_b, Color(255, 255, 255, 255)}--左下
         )
         lstg.PopRenderTarget()
-        lstg.SaveTexture(self.capture_tex, 'danmaku_recorder/tmp/' .. task_name .. "/" .. string.format("%03d", index) .. ".jpg")
+        lstg.SaveTexture(self.capture_tex, Storage.generateTempTaskFilePath(task_name, string.format("%03d", index) .. ".jpg"))
         index = index + 1
         if index >= max_frame then
             self:end_record()
@@ -217,7 +212,7 @@ function recorder:start_record()
         task_name = tostring(os.time())
         index = 0
         frame_counter = 0
-        lstg.FileManager.CreateDirectory('danmaku_recorder/tmp/' .. task_name)
+        Storage.createTempTaskDirectory(task_name)
         self.capture_tex = "danmaku_recorder_capture_" .. task_name
         local last_pool_state = lstg.GetResourceStatus()
         lstg.SetResourceStatus("global")
@@ -234,9 +229,9 @@ function recorder:end_record()
     if status == "recording" then
         status = "initialized"
         local width, height = lstg.GetTextureSize(self.capture_tex)
-        local tmp = 'danmaku_recorder\\tmp\\' .. task_name .. '\\'
+        local tmp = Storage.toWindowsPathStyle(Storage.getTempTaskDirectory(task_name) .. "/") -- 草，末尾要补个分隔符
         local encoder = encoder_info[current_encoder]
-        local output_path = 'danmaku_recorder\\output\\' .. task_name .. "." .. encoder.target_format
+        local output_path = Storage.toWindowsPathStyle(Storage.generateOutputFilePath(task_name .. "." .. encoder.target_format))
         local gen_command_info = {
             encoder_path = encoder.encoder_path,
             temp_dir = tmp,
@@ -251,9 +246,9 @@ function recorder:end_record()
             last_record_info.success = false
             last_record_info.size = -1
         else
-            lstg.FileManager.RemoveDirectory('danmaku_recorder/tmp/' .. task_name)
+            Storage.clearTempTaskDirectory(task_name)
             lstg.RemoveResource("global", 1, self.capture_tex)
-    
+
             last_record_info.task_name = task_name
             last_record_info.frame = index
             local fhandle = io.open(output_path, "r")
