@@ -2,7 +2,7 @@ local recorder = {}
 
 recorder.ver = {}
 recorder.ver.major = 1
-recorder.ver.minor = 1
+recorder.ver.minor = 2
 recorder.ver.patch = 0
 
 ---@class danmaku_recorder.encoder_info
