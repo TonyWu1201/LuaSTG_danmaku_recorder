@@ -13,6 +13,16 @@
         "enable" : true,
         "path" : "userdata/extension_config/danmaku_recorder.json"
     },
+    "load_sound" : [
+    ],
+    "hint" : {
+        "se" : {
+            "enable" : true,
+            "volume" : 1.0,
+            "on_start" : "nice",
+            "on_stop" : "extend"
+        }
+    },
     "default_config" : {
         "framerate" : 20,
         "scale" : 0.4,

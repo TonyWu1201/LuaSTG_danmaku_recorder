@@ -38,6 +38,10 @@ local capture_b = 0
 
 local last_record_info = {}
 
+local se_hint = {
+    enable = false
+}
+
 local function call_command(cmd)
     return os.execute(cmd)
 end
@@ -79,6 +83,32 @@ function recorder:load_config()
         end
     end
     current_encoder = min(max(current_encoder, 1), #encoder_info)
+    if config["load_sound"] then
+        for _, info in ipairs(config["load_sound"]) do
+            if type(info["name"]) == "string" and type(info["path"]) == "string" then
+                lstg.LoadSound(info["name"], info["path"])
+            end
+        end
+    end
+    if config["hint"] then
+        if config["hint"]["se"] then
+            local se_hint_config = config["hint"]["se"]
+            if se_hint_config.enable then
+                se_hint.enable = true
+                if type(se_hint_config.volume) == "number" then
+                    se_hint.volume = se_hint_config.volume
+                else
+                    se_hint.volume = 1.0
+                end
+                if type(se_hint_config.on_start) == "string" and se_hint_config.on_start ~= "" then
+                    se_hint.on_start = se_hint_config.on_start
+                end
+                if type(se_hint_config.on_stop) == "string" and se_hint_config.on_stop ~= "" then
+                    se_hint.on_stop = se_hint_config.on_stop
+                end
+            end
+        end
+    end
 end
 
 function recorder.get_status()
@@ -243,6 +273,9 @@ end
 
 function recorder:start_record()
     if status == "initialized" then
+        if se_hint.enable and se_hint.on_start then
+            lstg.PlaySound(se_hint.on_start, se_hint.volume)
+        end
         status = "recording"
         task_name = tostring(os.time())
         index = 0
@@ -262,6 +295,9 @@ end
 
 function recorder:end_record()
     if status == "recording" then
+        if se_hint.enable and se_hint.on_stop then
+            lstg.PlaySound(se_hint.on_stop, se_hint.volume)
+        end
         status = "initialized"
         local width, height = lstg.GetTextureSize(self.capture_tex)
         local tmp = Storage.toWindowsPathStyle(Storage.getTempTaskDirectory(task_name) .. "/") -- 草，末尾要补个分隔符
