@@ -96,6 +96,20 @@ Danmaku Recorder 插件目前支持以下编码库：
 
 * `encoder_path` 用于指定编码器可执行路径。
 * `preferred_encoder` 用于指定优先使用的编码器。
+* `load_sound` 在插件初始化时加载音效<br>
+eg.
+    ```json
+    "load_sound" : [
+        {
+            "name" : "sename",
+            "path" : "sepath"
+        }
+    ],
+    ```
+* `hint->se` 使用音效提示录制状态相关的设置
+    * `enable` 是否启用
+    * `volume` 音量大小
+    * `on_start` `on_stop` 开始与结束时播放的音效，填空字符串则不播放音效
 
 以下功能**只对**ImGui UI有效
 
