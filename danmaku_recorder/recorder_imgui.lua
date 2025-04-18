@@ -76,6 +76,7 @@ function recorder_imgui:init()
     self.current_encoder = recorder:get_current_encoder()
     self.start_record_trigger = {}
     self.end_record_trigger = {}
+    self.text_hint = {undefined = true}
     if config then
         if config.hotkeys then
             if config.hotkeys.start_record then
@@ -105,6 +106,56 @@ function recorder_imgui:init()
                 end
             end
         end
+        if type(config.load_ttf) == "table" then
+            for _, info in ipairs(config.load_ttf) do
+                if type(info.name) == "string" and type(info.path) == "string" and type(info.size) == "number" then
+                    lstg.LoadTTF(info.name, info.path, 0, info.size)
+                end
+            end
+        end
+        if config.hint then
+            if config.hint.text then
+                local text_hint_config = config.hint.text
+                if type(text_hint_config.enable) == "boolean" then
+                    self.text_hint.enable = text_hint_config.enable
+                    if type(text_hint_config.content) == "string" then
+                        self.text_hint.content = text_hint_config.content
+                    else
+                        self.text_hint.content = "RECORDING"
+                    end
+                    self.text_hint.font = text_hint_config.font
+                    if type(text_hint_config.position) == "table" then
+                        self.text_hint.x = text_hint_config.position[1] or 10
+                        self.text_hint.y = text_hint_config.position[2] or 10
+                    else
+                        self.text_hint.x = 10
+                        self.text_hint.y = 10
+                    end
+                    if type(text_hint_config.scale) == "number" then
+                        self.text_hint.scale = text_hint_config.scale
+                    else
+                        self.text_hint.scale = 1
+                    end
+                    if type(text_hint_config.color) == "table" then
+                        self.text_hint.a = text_hint_config.color[1] or 100
+                        self.text_hint.r = text_hint_config.color[2] or 255
+                        self.text_hint.g = text_hint_config.color[3] or 255
+                        self.text_hint.b = text_hint_config.color[4] or 255
+                    else
+                        self.text_hint.a = 100
+                        self.text_hint.r = 255
+                        self.text_hint.g = 255
+                        self.text_hint.b = 255
+                    end
+                    self.text_hint.preview = false
+                    self.text_hint.undefined = false
+                    if type(text_hint_config.font) ~= "string" then
+                        lstg.Log(3, "[danmaku_recorder] hint.text.font 必须是字符串")
+                        self.text_hint.undefined = true
+                    end
+                end
+            end
+        end
         local loaded = false
         if config.save_config and config.save_config.enable and type(config.save_config.path) == "string" then
             if lstg.FileManager.FileExist(config.save_config.path) then
@@ -123,6 +174,20 @@ function recorder_imgui:init()
                         end
                         if recorder_ui_config.encoder and type(recorder_ui_config.encoder) == "number" then
                             self.current_encoder = min(max(recorder_ui_config.encoder, 1), #self.encoder_list)
+                        end
+                        if self.text_hint and not self.text_hint.undefined then
+                            if recorder_ui_config.enable_text_hint then
+                                self.text_hint.enable = true
+                                if type(recorder_ui_config.text_hint_x) == "number" then
+                                    self.text_hint.x = recorder_ui_config.text_hint_x
+                                end
+                                if type(recorder_ui_config.text_hint_y) == "number" then
+                                    self.text_hint.y = recorder_ui_config.text_hint_y
+                                end
+                                if type(recorder_ui_config.text_hint_scale) == "number" then
+                                    self.text_hint.scale = recorder_ui_config.text_hint_scale
+                                end
+                            end
                         end
                         loaded = true
                     else
@@ -184,6 +249,8 @@ function recorder_imgui:init()
     imgui.backend.CacheGlyphFromString("未初始化无法使用")
     imgui.backend.CacheGlyphFromString("保存成功失败帧数文件大小")
     imgui.backend.CacheGlyphFromString("在文件夹中显示")
+    imgui.backend.CacheGlyphFromString("提示录制状态")
+    imgui.backend.CacheGlyphFromString("预览")
 end
 
 function recorder_imgui:getWindowName()
@@ -305,8 +372,8 @@ function recorder_imgui:update()
 end
 
 function recorder_imgui:render()
+    SetViewMode("ui")
     if self.show_capture or self.set_capture_status == "capturing" then
-        SetViewMode("ui")
         local l_color = lstg.Color(self.highlight_color[4] * 255, self.highlight_color[1] * 255, self.highlight_color[2] * 255, self.highlight_color[3] * 255)
         lstg.SetImageState("white", "mul+add", l_color)
         local capture_area = recorder:get_capture_area()
@@ -316,8 +383,11 @@ function recorder_imgui:render()
                 capture_area.r, capture_area.t, 0.5,
                 capture_area.r, capture_area.b, 0.5
             )
-        SetViewMode("world") -- 恢复
     end
+    if self.text_hint.enable and (self.text_hint.preview or recorder:get_status() == "recording") then
+        RenderTTF2(self.text_hint.font, self.text_hint.content, self.text_hint.x, self.text_hint.x, self.text_hint.y, self.text_hint.y, self.text_hint.scale, Color(self.text_hint.a, self.text_hint.r, self.text_hint.g, self.text_hint.b), "centerpoint")
+    end
+    SetViewMode("world") -- 恢复
 end
 
 function recorder_imgui:layout()
@@ -394,8 +464,21 @@ function recorder_imgui:layout()
         if recorder:get_status() ~= "initialized" then
             imgui.ImGui.EndDisabled()
         end
-        _, self.show_capture = imgui.ImGui.Checkbox("显示录制区域", self.show_capture)
+        _, self.show_capture = imgui.ImGui.Checkbox("显示录制区域" .. label, self.show_capture)
         _, self.highlight_color = imgui.ImGui.ColorEdit4("高亮颜色" .. label, self.highlight_color, color_flag)
+        if not self.text_hint.undefined then
+            ret, self.text_hint.enable = imgui.ImGui.Checkbox("提示录制状态" .. label, self.text_hint.enable)
+            changed = changed or ret
+            imgui.ImGui.SameLine()
+            _, self.text_hint.preview = imgui.ImGui.Checkbox("预览" .. label, self.text_hint.preview)
+
+            ret, self.text_hint.x = imgui.ImGui.SliderInt("x" .. label, self.text_hint.x, -20, screen.width + 20)
+            changed = ret or changed
+            ret, self.text_hint.y = imgui.ImGui.SliderInt("y" .. label, self.text_hint.y, -20, screen.height + 20)
+            changed = ret or changed
+            ret, self.text_hint.scale = imgui.ImGui.SliderFloat("scale" .. label, self.text_hint.scale, 0, 5)
+            changed = ret or changed
+        end
         imgui.ImGui.Text(string.format("Danmaku Recorder UI ver %d.%d.%d", recorder_imgui.ver.major, recorder_imgui.ver.minor, recorder_imgui.ver.patch))
         imgui.ImGui.Text(string.format("Danmaku Recorder Core ver %d.%d.%d", recorder.ver.major, recorder.ver.minor, recorder.ver.patch))
 
@@ -406,6 +489,12 @@ function recorder_imgui:layout()
                 maxframe_list_pos = self.maxframe_list_pos,
                 encoder = self.current_encoder
             }
+            if not self.text_hint.undefined then
+                cfg.enable_text_hint = self.text_hint.enable
+                cfg.text_hint_x = self.text_hint.x
+                cfg.text_hint_y = self.text_hint.y
+                cfg.text_hint_scale = self.text_hint.scale
+            end
             local success, encoded_cfg = pcall(cjson.encode, cfg)
             if success then
                 local formated_cfg = cjson_util.format_json(encoded_cfg)

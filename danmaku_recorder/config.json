@@ -15,12 +15,27 @@
     },
     "load_sound" : [
     ],
+    "load_ttf" : [
+        {
+            "name" : "recorder_ui_font",
+            "path" : "danmaku_recorder/recorder_ui_font.otf",
+            "size" : 20
+        }
+    ],
     "hint" : {
         "se" : {
             "enable" : true,
             "volume" : 1.0,
             "on_start" : "nice",
             "on_stop" : "extend"
+        },
+        "text" : {
+            "enable" : true,
+            "content" : "◯REC",
+            "font" : "recorder_ui_font",
+            "position" : [590, 30],
+            "scale" : 2,
+            "color" : [200, 255, 0, 0]
         }
     },
     "default_config" : {
