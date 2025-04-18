@@ -96,7 +96,7 @@ Danmaku Recorder 插件目前支持以下编码库：
 
 * `encoder_path` 用于指定编码器可执行路径。
 * `preferred_encoder` 用于指定优先使用的编码器。
-* `load_sound` 在插件初始化时加载音效<br>
+* `load_sound` 在插件初始化时加载音效。<br>
 eg.
     ```json
     "load_sound" : [
@@ -106,14 +106,14 @@ eg.
         }
     ],
     ```
-* `hint->se` 使用音效提示录制状态相关的设置
-    * `enable` 是否启用
-    * `volume` 音量大小
-    * `on_start` `on_stop` 开始与结束时播放的音效，填空字符串则不播放音效
+* `hint->se` 使用音效提示录制状态相关的设置。
+    * `enable` 是否启用。
+    * `volume` 音量大小。
+    * `on_start` `on_stop` 开始与结束时播放的音效，填空字符串则不播放音效。
 
 以下功能**只对**ImGui UI有效
 
-+ `hotkeys` 用于指定开始录制和停止录制的快捷键。参考`Lkeycode.lua`。<br>
+* `hotkeys` 用于指定开始录制和停止录制的快捷键。参考`Lkeycode.lua`。<br>
 eg.
     ```json
     "hotkeys": {
@@ -121,9 +121,27 @@ eg.
         "end_record" : ["1", "Q", "F1"]
     },
     ```
-+ `auto_enable` 为`true`则会自动启用插件，`false`则需要手动打开。
-+ `save_config` 用于指定自动保存配置。`enable`为`true`即启用，`false`为禁用，`path`用于指定保存文件的路径。
-+ `default_config` 用于指定默认配置。只在禁用自动保存或未从文件中读取配置时生效。
+* `auto_enable` 为`true`则会自动启用插件，`false`则需要手动打开。
+* `save_config` 用于指定自动保存配置。`enable`为`true`即启用，`false`为禁用，`path`用于指定保存文件的路径。
+* `default_config` 用于指定默认配置。只在禁用自动保存或未从文件中读取配置时生效。
+* `load_ttf` 在UI初始化时加载字体。<br>
+eg.
+    ```json
+    "load_ttf" : [
+        {
+            "name" : "recorder_ui_font",
+            "path" : "danmaku_recorder/recorder_ui_font.otf",
+            "size" : 20
+        }
+    ],
+    ```
+* `hint->text` 在录制时渲染文字提示。
+    * `enable` 是否启用。
+    * `content` 显示的内容。
+    * `font` 渲染用的字体名。
+    * `position` 渲染中心的坐标（对应xy）。
+    * `scale` 缩放比例。
+    * `color` 渲染颜色（对应argb）。
 
 ### ImGui UI
 
