@@ -6,7 +6,7 @@ local cjson_util = require("cjson.util")
 local recorder_imgui = {}
 recorder_imgui.ver = {}
 recorder_imgui.ver.major = 1
-recorder_imgui.ver.minor = 2
+recorder_imgui.ver.minor = 3
 recorder_imgui.ver.patch = 0
 recorder_imgui.enable = false
 
